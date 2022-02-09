@@ -6,8 +6,9 @@ public class Launcher {
         Scanner clavier = new Scanner(System.in);
         System.out.println("Bienvenue");
         String var2 = clavier.nextLine();
-        if (!var2.equals(var1)) {
+        while (!var2.equals(var1)) {
             System.out.println("Unknown command");
+            var2 = clavier.nextLine();
         }
 
         clavier.close();
