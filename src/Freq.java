@@ -1,6 +1,8 @@
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class Freq implements Command{
     @Override
@@ -20,37 +22,36 @@ public class Freq implements Command{
     }
 
     private static void frequences(String file) {
-        System.out.println("Enter a file name : ");
-        String s = null;
+        String content;
         try {
-            s = java.nio.file.Files.readString(Path.of(file));
+            content = Files.readString(Path.of(file));
         } catch (IOException e) {
             System.err.println("Unreadable file: " + e.getMessage());
+            return;
         }
 
-        assert s != null;
-        s = Arrays.toString(new String[]{s.replaceAll("[^a-zA-Z ]", "").toLowerCase()});
+        content = content.toLowerCase().replaceAll("[.!?\\-'\"\n]", " ");
 
-        Map<String, Integer> frequences = new HashMap<>();
-        List<String> most_used = new ArrayList<>();
+        Map<String, Integer> freq = new HashMap<>();
 
-        for (var i : s.split(" ")) {
-            if (i.isBlank()) {
-                continue;
-            }
+        for (var word : content.split(" ")) {
+            if (word.isBlank()) continue;
 
-            frequences.putIfAbsent(i, 0);
-            frequences.put(i, frequences.get(i) + 1);
+            freq.putIfAbsent(word, 0);
+            freq.put(word, freq.get(word) + 1);
         }
 
-        while(most_used.size() < 3 && frequences.keySet().size() > 0) {
-            int max_value = Collections.max(frequences.values());
-            var key = frequences.keySet().stream().filter(j -> frequences.get(j) == max_value).toList();
-            var last_value = key.get(key.size() - 1);
-            most_used.add(last_value);
-            frequences.remove(last_value);
+        List<String> words = new ArrayList<>();
+
+        while(words.size() < 3 && freq.keySet().size() > 0) {
+            int max = Collections.max(freq.values());
+            var keys = freq.keySet().stream().filter(k -> freq.get(k) == max).collect(Collectors.toList());
+            var last = keys.get(keys.size() - 1);
+            words.add(last);
+            freq.remove(last);
         }
-        System.out.println(String.join(" ", most_used));
+
+        System.out.println(String.join(" ", words));
     }
 
 }
