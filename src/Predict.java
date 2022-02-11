@@ -11,10 +11,6 @@ public class Predict implements Command {
         return "predict";
     }
 
-    @Override
-    public boolean function(Scanner scanner) {
-        return false;
-    }
 
     @Override
     public boolean run(Scanner scanner) {

@@ -10,13 +10,10 @@ public class Freq implements Command{
         return "freq";
     }
 
-    @Override
-    public boolean function(Scanner scanner) {
-        return false;
-    }
 
     @Override
     public boolean run(Scanner scanner) {
+        System.out.println("Enter a filename:");
         frequences(scanner.nextLine());
         return false;
     }

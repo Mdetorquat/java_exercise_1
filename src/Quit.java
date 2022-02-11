@@ -6,13 +6,9 @@ public class Quit implements Command {
         return "quit";
     }
 
-    @Override
-    public boolean function(Scanner scanner) {
-        return true;
-    }
 
     @Override
     public boolean run(Scanner scanner) {
-        return false;
+        return true;
     }
 }

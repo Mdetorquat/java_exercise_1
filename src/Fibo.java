@@ -6,10 +6,6 @@ public class Fibo implements Command {
         return "fibo";
     }
 
-    @Override
-    public boolean function(Scanner scanner) {
-        return false;
-    }
 
     @Override
     public boolean run(Scanner scanner) {
@@ -20,7 +16,7 @@ public class Fibo implements Command {
         return false;
     }
 
-    public static int fibonacci(int n) {
+    private static int fibonacci(int n) {
         int fibo1 = 0;
         int fibo2 = 1;
         int fibo3 = 1;
