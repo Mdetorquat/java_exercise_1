@@ -1,72 +1,90 @@
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Predict implements Command {
+    private static class Word {
+        private final String word;
+        private final Map<String, Integer> occurences = new HashMap<>();
+
+        public Word(String word) {
+            this.word = word;
+        }
+
+        public void putFollower(String w) {
+            this.occurences.put(w, this.occurences.getOrDefault(w, 0) + 1);
+        }
+
+        public String predict() {
+            if (occurences.isEmpty())
+                return null;
+
+            var i = Collections.max(occurences.values());
+
+            var list = this.occurences.keySet().stream().filter(k -> occurences.get(k).equals(i)).toList();
+
+            return list.get(0);
+        }
+    }
+
     @Override
     public String name() {
         return "predict";
     }
 
-
     @Override
     public boolean run(Scanner scanner) {
-        System.out.println("Enter a file name");
-
+        System.out.println("Enter a filename:");
         String s;
         try {
-            Map<String, Map<String, Integer>> map = new HashMap<>();
-            s = scanner.nextLine();
-            String string = Files.readString(Paths.get(s));
-            String[] dico = string.replaceAll("[^a-zA-Z ]", "").toLowerCase().split(" ");
-
-            for (int i = 0; i < dico.length - 1; i++) {
-                String str = dico[i];
-                String next = dico[i+1];
-
-                Map<String, Integer> map2 = map.get(str);
-
-                if(map2 == null) {
-                    map2 = new HashMap<>();
-                    map.put(str, map2);
-                    map2.put(next, 1);
-                    continue;
-                }
-                Integer j = map2.get(next);
-                if (j == null)
-                    map2.put(next, 1);
-                else
-                    map2.replace(next, j+1);
-            }
-            System.out.println("Enter a word : ");
-            s = scanner.nextLine();
-            if (!map.containsKey(s)) {
-                System.out.println("This word is not in the text !");
-                return false;
-            }
-            String next = s;
-            StringBuilder builder = new StringBuilder();
-            int len = 1;
-            while (map.containsKey(next) && len++ < 20) {
-                Map<String, Integer> map3 = map.get(next);
-                Integer value = 0;
-                map.remove(next);
-                builder.append(" ").append(next);
-                for(Map.Entry<String, Integer> e : map3.entrySet()) {
-                    if(e.getValue() > value) {
-                        next = e.getKey();
-                        value = e.getValue();
-                    }
-                }
-            }
-            builder.append(' ').append(next);
-            System.out.println("Most common sentence :" + builder);
-        } catch (IOException e) {
-            System.out.println("Unreadable file : " + e.getClass() + " " + e.getMessage());
+            s = Files.readString(Path.of(scanner.nextLine()));
+        } catch (Exception e) {
+            System.err.println("Unreadable file: " + e.getMessage());
+            return false;
         }
+
+        s = s.toLowerCase()
+                .replaceAll("[.!?\\-'\"\t\n]", " ")
+                .replaceAll(" {2}", " ");
+
+        if (s.isBlank())
+            return false;
+
+        Map<String, Word> mapWords = new HashMap<>();
+
+        var lastWord = Arrays.stream(s.split(" "))
+                .filter(k -> !k.isBlank())
+                .reduce("", (prev, next) -> {
+                    if (!prev.isBlank()) {
+                        mapWords.putIfAbsent(prev, new Word(prev));
+                        mapWords.get(prev).putFollower(next);
+                    }
+                    return next;
+                });
+
+        mapWords.putIfAbsent(lastWord, new Word(lastWord));
+
+        System.out.println("Enter a word :");
+        var startWord = scanner.nextLine().toLowerCase();
+
+        if (!mapWords.containsKey(startWord))
+            System.err.println("Word not found in the text!");
+
+        else {
+            var sentence = new ArrayList<>(List.of(startWord));
+            while (sentence.size() < 20) {
+                var nextWord = mapWords.get(sentence.get(sentence.size() - 1)).predict();
+                if (nextWord == null)
+                    break;
+                sentence.add(nextWord);
+            }
+
+            System.out.println(String.join(" ", sentence));
+        }
+
+
         return false;
     }
 }
